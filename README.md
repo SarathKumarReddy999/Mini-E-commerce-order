@@ -15,11 +15,17 @@
 1. **Independent Codebases:** Each service gets its own folder/repository.
 2. **Database per Service:** Services DO NOT share a database. They must ask each other for data via APIs.
 
-## 4. Service #1: Product Service (Java/Spring Boot)
-* **Build Tool:** Gradle (`build.gradle` manages dependencies).
+## 4. Service Designs & Flows
+### A. Eureka Naming Server (Service Discovery)
+* **Port:** 8761
+* **Role:** Tracks all active microservices. Shows a UI dashboard at `localhost:8761`.
+
+### B. Product Service (`product-service`)
 * **Port:** 9071
-* **Database:** H2 (In-memory, isolated to this service only).
-* **Endpoints:**
-    * `GET /products` -> Returns a list of all products.
-    * `POST /products` -> Creates a new product.
-* **Microservice Rule Applied:** *Database Isolation*. The Product Service manages its own data. If the Order Service wants product info, it CANNOT read the H2 database directly. It must call `GET /products`.
+* **Database:** H2 (`jdbc:h2:mem:productdb`)
+* **Role:** Registers with Eureka on startup. Returns product JSON data.
+
+### C. Order Service (`order-service`)
+* **Port:** 9081
+* **Database:** H2 (`jdbc:h2:mem:orderdb`)
+* **Concept Highlight:** Uses a `@LoadBalanced RestClient`. It asks Eureka, "Where is `product-service`?", gets the active IP behind the scenes, and makes the API call dynamically to calculate the total price.
