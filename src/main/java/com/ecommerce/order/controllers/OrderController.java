@@ -17,17 +17,20 @@ public class OrderController {
     private final OrderRepository repository;
     private final RestClient restClient;
 
-    public OrderController(OrderRepository repository) {
+    public OrderController(OrderRepository repository, RestClient.Builder restClientBuilder) {
         this.repository = repository;
         // Initialize the client used to make HTTP calls to other services
-        this.restClient = RestClient.create(); 
+        // Inject the Builder, not the raw RestClient, 
+        // so that we can take advantage of the @LoadBalanced configuration!
+        this.restClient = restClientBuilder.build();
     }
 
     @PostMapping
     public Order placeOrder(@RequestBody Order incomingOrder) {
         
         // 1. CALL THE PRODUCT SERVICE (The Walkie-Talkie)
-        String productServiceUrl = "http://localhost:9071/products/" + incomingOrder.getProductId();
+        // NO MORE LOCALHOST! Use the Eureka registered name of the Product Service instead!
+        String productServiceUrl = "http://product-service/products/" + incomingOrder.getProductId();
         
         ProductDTO productData = restClient.get()
                 .uri(productServiceUrl)
