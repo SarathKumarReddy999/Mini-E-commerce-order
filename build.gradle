@@ -31,6 +31,11 @@ dependencies {
 
     // 2. Add the Eureka Client dependency
     implementation 'org.springframework.cloud:spring-cloud-starter-netflix-eureka-client'
+
+	// Add Resilience4j for circuit breaking and fault tolerance
+	// Resilience4j requires the Spring AOP library to understand our annotations
+    implementation 'org.springframework.cloud:spring-cloud-starter-circuitbreaker-resilience4j'
+    implementation 'org.springframework.boot:spring-boot-starter-aop'
 }
 
 // 3. The Dependency Management block (Master Dictionary for Spring Cloud)

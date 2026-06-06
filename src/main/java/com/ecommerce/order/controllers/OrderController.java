@@ -10,6 +10,8 @@ import com.ecommerce.order.DTOs.ProductDTO;
 import com.ecommerce.order.entities.Order;
 import com.ecommerce.order.repositories.OrderRepository;
 
+import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
+
 @RestController
 @RequestMapping("/orders")
 public class OrderController {
@@ -26,6 +28,7 @@ public class OrderController {
     }
 
     @PostMapping
+    @CircuitBreaker(name = "productServiceBreaker", fallbackMethod = "placeOrderFallback")
     public Order placeOrder(@RequestBody Order incomingOrder) {
         
         // 1. CALL THE PRODUCT SERVICE (The Walkie-Talkie)
@@ -43,6 +46,22 @@ public class OrderController {
 
         // 3. Save to the Order Database
         return repository.save(incomingOrder);
+    }
+
+    // 2. CREATE THE FALLBACK METHOD
+    // The signature must perfectly match the original method, but with an added Throwable parameter!
+    public Order placeOrderFallback(Order incomingOrder, Throwable throwable) {
+        
+        System.out.println("Product Service is DOWN! Triggering Fallback logic.");
+        
+        // Return a dummy order to prevent the system from crashing, 
+        // or you could throw a custom "ServiceUnavailableException" here.
+        Order fallbackOrder = new Order();
+        fallbackOrder.setProductId(incomingOrder.getProductId());
+        fallbackOrder.setQuantity(incomingOrder.getQuantity());
+        fallbackOrder.setTotalPrice(0.0); // Price is 0 because we can't fetch it!
+        
+        return fallbackOrder; 
     }
 
 }
